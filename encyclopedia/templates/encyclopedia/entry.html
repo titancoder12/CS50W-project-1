@@ -1,0 +1,10 @@
+{% load markdownify %}
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block body %}
+    {{ text |markdownify }}
+{% endblock %}
