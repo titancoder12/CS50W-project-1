@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 import markdown2
 from django.http import HttpResponseRedirect, HttpResponse
 from django import forms
+from random import choice
 
 from . import util
 
@@ -11,6 +12,7 @@ def index(request):
     return render(request, "encyclopedia/index.html", {
         "entries": util.list_entries()
     })
+
 
 # Displays the entry.
 def entry(request, title):
@@ -41,6 +43,7 @@ def entry(request, title):
             "message": "Not Found",
             "submessage": "The page you appear to be looking for does not exist.",
         }), status=404) 
+
 
 # Allows users to search for entries.
 # Fix error on line 40
@@ -84,8 +87,9 @@ def search(request):
     # Return to index if method is not GET
     return HttpResponseRedirect("/")
 
+
 # Allows for users to create pages.
-def createpage(request):
+def create(request):
     # Check if method is post
     if request.method == "POST":
         
@@ -108,6 +112,53 @@ def createpage(request):
         return redirect("/")
     else:
         # Render form
-        return render(request, "encyclopedia/createpage.html")
+        return render(request, "encyclopedia/create.html")
 
 
+# Allows users to edit existing entries.
+def edit(request, title):
+    # Get all titles
+    titles = util.list_entries()
+    
+    # Check if title exists
+    if title not in titles:
+        # Render template with error message
+        return render(request, "encyclopedia/error.html", {
+            "error": 404,
+            "message": "Not Found",
+            "submessage": "The file you are trying to edit does not exist."
+        })
+    
+    # Check if method is post
+    if request.method == "POST":
+        # Get title and entry from form
+        entry = request.POST.get("entry")
+        # Save entry
+        util.save_entry(title, entry)
+        
+        # Redirect back to page index
+        return redirect("/")
+    else:
+        # Get title
+        entry_titles = util.list_entries()
+        for entry_title in entry_titles:
+            if entry_title == title:
+                break
+        
+        # Get content
+        content = util.get_entry(title)
+
+        # Render template and provide variables
+        return render(request, "encyclopedia/edit.html", {
+            "title": entry_title,
+            "content": content
+        })
+
+
+# Allows users to look at a random page.
+def random(request):
+    entries = util.list_entries()
+    print(entries)
+    random_entry = choice(entries)
+    print(random_entry)
+    return redirect("wiki/"+random_entry)

@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'markdown2',
     'django.http',
-    'django'
+    'django',
+    'random'
 ]
 
 MIDDLEWARE = [
