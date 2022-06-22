@@ -5,7 +5,7 @@ from django import forms
 
 from . import util
 
-# Index page or home page. Displays list of entries.
+# Index page. Displays list of entries.
 def index(request):
     # Render template and provide list of entries
     return render(request, "encyclopedia/index.html", {
@@ -14,12 +14,15 @@ def index(request):
 
 # Displays the entry.
 def entry(request, title):
+    
     # Get entry
     entry = util.get_entry(title)
+    
     # Check if entry exists
     if entry is not None:
         # convert markdown to html
         text = markdown2.markdown(entry)
+        
         # get title
         entry_titles = util.list_entries()
         for entry_title in entry_titles:
@@ -44,6 +47,7 @@ def entry(request, title):
 def search(request):
     if request.method == "GET":
         q = request.GET.get('q')
+        
         # Check if request matches any entry. If it does, redirect to entry
         if util.get_entry(q) is not None:
             return redirect("wiki/"+q)
@@ -52,6 +56,7 @@ def search(request):
         entries = util.list_entries()
         results = []
         num_results = 0
+        
         # Lowercase q
         lower_q = q.lower()
 
@@ -61,6 +66,7 @@ def search(request):
             if lower_q in entries[i].lower():
                 results.append(entries[i])
                 num_results += 1
+        
         # Add "s" to the word "result" if there is one result
         if num_results == 1:
             s = ""
@@ -77,3 +83,31 @@ def search(request):
     
     # Return to index if method is not GET
     return HttpResponseRedirect("/")
+
+# Allows for users to create pages.
+def createpage(request):
+    # Check if method is post
+    if request.method == "POST":
+        
+        # Get title and entry from form
+        title = request.POST.get("title")
+        entry = request.POST.get("entry")
+
+        # Check if entry name already exists.
+        if title in util.list_entries():
+            return render(request, "encyclopedia/error.html", {
+                "error": 409,
+                "message": "Conflict",
+                "submessage": "The page you are trying to create has the same title as another page."
+            })
+
+        # Save entry
+        util.save_entry(title, entry)
+        
+        # Redirect back to page index
+        return redirect("/")
+    else:
+        # Render form
+        return render(request, "encyclopedia/createpage.html")
+
+
