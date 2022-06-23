@@ -28,7 +28,7 @@ def entry(request, title):
         # get title
         entry_titles = util.list_entries()
         for entry_title in entry_titles:
-            if entry_title == title:
+            if entry_title.lower() == title.lower():
                 break
 
         # Render template and provide variables
@@ -93,23 +93,37 @@ def create(request):
     # Check if method is post
     if request.method == "POST":
         
+        # lowercase entries
+        lower_entries = []
+        entries = util.list_entries()
+        for entry in entries:
+            lower_entries.append(entry.lower())
+
         # Get title and entry from form
         title = request.POST.get("title")
         entry = request.POST.get("entry")
 
         # Check if entry name already exists.
-        if title in util.list_entries():
+        if title.lower() in lower_entries:
             return render(request, "encyclopedia/error.html", {
                 "error": 409,
                 "message": "Conflict",
                 "submessage": "The page you are trying to create has the same title as another page."
             })
 
+        # Check if entry name is not blank
+        if title == "":
+            return render(request, "encyclopedia/error.html", {
+                "error": 400,
+                "message": "Bad Request",
+                "submessage": "The title of the page you are trying must include at least 1 character."
+            })
+
         # Save entry
         util.save_entry(title, entry)
         
-        # Redirect back to page index
-        return redirect("/")
+        # Redirect to new page
+        return redirect("wiki/"+title)
     else:
         # Render form
         return render(request, "encyclopedia/create.html")
@@ -136,8 +150,8 @@ def edit(request, title):
         # Save entry
         util.save_entry(title, entry)
         
-        # Redirect back to page index
-        return redirect("/")
+        # Redirect to new page
+        return redirect("/wiki/"+title)
     else:
         # Get title
         entry_titles = util.list_entries()
